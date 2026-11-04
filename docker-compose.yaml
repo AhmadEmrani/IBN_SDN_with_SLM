@@ -1,0 +1,39 @@
+services:
+  ryu-controller:
+    build:
+      context: .
+      dockerfile: Dockerfile.ryu
+    container_name: ryu-controller
+    ports:
+      - "6653:6653"
+      - "8080:8080"
+    networks:
+      sdn-net:
+        ipv4_address: 172.20.0.10
+
+  mininet-net:
+    build:
+      context: .
+      dockerfile: Dockerfile.mininet
+    container_name: mininet-net
+    privileged: true
+    stdin_open: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /lib/modules:/lib/modules:ro
+      - ./:/app
+    command: tail -f /dev/null
+    depends_on:
+      - ryu-controller
+    networks:
+      sdn-net:
+        ipv4_address: 172.20.0.20
+
+networks:
+  sdn-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
