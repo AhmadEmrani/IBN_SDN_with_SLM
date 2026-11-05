@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-llnet}
+      POSTGRES_USER: ${POSTGRES_USER:-llnet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks: [sdn-net]
+
+  ryu-controller:
+    build:
+      context: .
+      dockerfile: Dockerfile.ryu
+    container_name: ryu-controller
+    ports:
+      - "127.0.0.1:6653:6653"
+    networks:
+      sdn-net:
+        ipv4_address: 172.20.0.10
+
+  mininet-net:
+    build:
+      context: .
+      dockerfile: Dockerfile.mininet
+    container_name: mininet-net
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - /lib/modules:/lib/modules:ro
+      - ./:/app
+    command: tail -f /dev/null
+    depends_on: [ryu-controller]
+    networks:
+      sdn-net:
+        ipv4_address: 172.20.0.20
+
+  policy-api:
+    build:
+      context: ./policy-manager
+      dockerfile: Dockerfile
+    container_name: llnet-policy-api
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-llnet}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-llnet}
+      RYU_URL: http://ryu-controller:8080
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ryu-controller:
+        condition: service_started
+    networks: [sdn-net]
+
+volumes:
+  postgres_data:
+
+networks:
+  sdn-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

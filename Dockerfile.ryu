@@ -14,4 +14,4 @@ COPY controller.py /app/
 
 EXPOSE 6653 8080
 
-CMD ["ryu-manager", "--verbose", "controller.py"]
+CMD ["ryu-manager", "--verbose", "controller.py", "ryu.app.ofctl_rest"]
