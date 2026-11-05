@@ -1,0 +1,298 @@
+{
+  "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "deny",
+          "title": "Type",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
+    "Constraints": {
+      "additionalProperties": false,
+      "properties": {
+        "start_at": {
+          "default": null,
+          "title": "Start At",
+          "type": "null"
+        },
+        "end_at": {
+          "default": null,
+          "title": "End At",
+          "type": "null"
+        }
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "Endpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ipv4",
+          "default": "ipv4",
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "Endpoint",
+      "type": "object"
+    },
+    "Match": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "destination": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "direction": {
+          "default": "unidirectional",
+          "enum": [
+            "unidirectional",
+            "bidirectional"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "protocol": {
+          "default": "any",
+          "enum": [
+            "any",
+            "tcp",
+            "udp",
+            "icmp"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        },
+        "source_ports": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Ports"
+        },
+        "destination_ports": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Ports"
+        }
+      },
+      "required": [
+        "source",
+        "destination"
+      ],
+      "title": "Match",
+      "type": "object"
+    },
+    "Metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "default": "manual",
+          "enum": [
+            "manual",
+            "intent_converter"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "intent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intent Id"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Tags",
+          "type": "array"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "title": "Metadata",
+      "type": "object"
+    },
+    "PolicyIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "type": {
+          "const": "firewall",
+          "title": "Type",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "priority": {
+          "default": 100,
+          "maximum": 999,
+          "minimum": 10,
+          "title": "Priority",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "PolicyIdentity",
+      "type": "object"
+    },
+    "Scope": {
+      "additionalProperties": false,
+      "properties": {
+        "network_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Network Id",
+          "type": "string"
+        },
+        "switches": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Switches",
+          "type": "array"
+        }
+      },
+      "required": [
+        "network_id",
+        "switches"
+      ],
+      "title": "Scope",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "policy": {
+      "$ref": "#/$defs/PolicyIdentity"
+    },
+    "scope": {
+      "$ref": "#/$defs/Scope"
+    },
+    "match": {
+      "$ref": "#/$defs/Match"
+    },
+    "action": {
+      "$ref": "#/$defs/Action"
+    },
+    "constraints": {
+      "$ref": "#/$defs/Constraints"
+    },
+    "metadata": {
+      "$ref": "#/$defs/Metadata"
+    }
+  },
+  "required": [
+    "schema_version",
+    "policy",
+    "scope",
+    "match",
+    "action"
+  ],
+  "title": "PolicyInput",
+  "type": "object"
+}
