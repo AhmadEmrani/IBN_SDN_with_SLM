@@ -1,17 +1,64 @@
-# SDN policy manager architecture
+# LLNet — implementation architecture
 
-The repository runs a Ryu OpenFlow 1.3 controller and a Mininet topology. The policy manager exposes a versioned HTTP API, validates and stores firewall policies, checks for contradictory rules, and compiles them into a transport-neutral OpenFlow rule description.
+Last updated: LLNet v0.2 stage 1 (data foundation). Do not confuse the
+implemented system with the approved architecture targeted for later stages.
 
-## Services
+## Currently implemented
 
-- **Ryu controller** (`controller.py`): controls switches and provides the OpenFlow control plane.
-- **Mininet** (`topology.py`): creates the test network and connects to Ryu.
-- **Policy manager** (`policy-manager/app`): FastAPI API and SQLite-backed policy storage.
+- OpenFlow 1.3 Ryu learning-switch controller in `controller.py`.
+- Open vSwitch in the Mininet topology (`topology.py`).
+- FastAPI Policy Manager in `policy-manager/app`, with v0.1 synchronous
+  `POST /api/v1/policies` and `DELETE /api/v1/policies/{policy_id}`.
+- PostgreSQL 16, SQLAlchemy and JSONB.
+- Ryu OpenFlow REST via `ryu.app.ofctl_rest`: `/stats/switches`,
+  `/stats/flowentry/add`, `/stats/flowentry/delete_strict`, `/stats/flow/{dpid}`.
+- Policy schema v1 for IPv4 deny and a pure dry-run Flow compiler.
+- Offline Swagger UI assets at `/docs`.
+- Stage-1 Alembic schema and imported legacy revisions, operation/outbox
+  models and read-only operation queries.
 
-The API is available at `/api/v1/policies`; `/health` is a basic liveness endpoint. `contracts/policy.schema.json` defines the portable policy payload. The Ryu adapter currently expects a `PUT /v1/policies` endpoint; the existing controller does not implement that endpoint yet, so API storage works independently and live reconciliation needs a matching controller endpoint.
+**NOT IMPLEMENTED YET:** Airflow, Dispatcher, async operation writes, explicit
+transactional reservations, automatic Reconciler, complete rollback, internal
+service authentication and rigorous cross-switch atomic deployment.
 
-## Local run
+## Approved target architecture
 
-Copy `.env.example` to `.env`, then run `docker compose up --build`. Enter Mininet with `docker compose exec mininet-net python3 topology.py`.
+```text
+Human / future SLM
+       |
+   FastAPI (business logic + authorization)
+       |                         |
+   PostgreSQL                operation engine
+   - policy revisions            |
+   - operations                  v
+   - audit / evidence       Ryu REST adapter -> Ryu -> OVS
+   - outbox events                ^
+       |                          |
+  Dispatcher -> Airflow DAG -> internal operation APIs
+       |
+  Independent reconciler reads desired/actual state and repairs drift
+```
 
-For local API development, install `policy-manager/requirements.txt` and run `uvicorn app.main:app --app-dir policy-manager --reload`.
+PostgreSQL is the operational source of truth; Airflow metadata is separate.
+Ryu/OVS observations are required to verify actual installation. An HTTP 200
+from Ryu does not prove successful installation of a rule.
+
+## Stage 1 compatibility notes
+
+The original `policies.status` column remains to serve legacy API calls. The
+new `desired_state`, `desired_revision_id` and `applied_revision_id` are
+populated for **imported historical policies**, but v0.1 write operations
+will not yet update all v0.2 structures. A future transition step must
+backfill any such writes before enabling the async operation API.
+
+## Future steps
+
+1. Stage 2: versioned policy writes, scope reservations, lifecycle API and
+   transactional outbox submission in one DB transaction.
+2. Stage 3: Airflow LocalExecutor, authenticated internal operations and
+   outbox Dispatcher.
+3. Stage 4: independent reconciler, evidence-backed compensation and fault
+   injection tests.
+4. Freeze stable v0.2 contracts before integrating the SLM intent converter.
+
+See `docs/llnet-v02-stage1-foundation.md` for migration details.

@@ -1,25 +1,18 @@
-from contextlib import asynccontextmanager
+"""App assembly only. Route handlers live in dedicated API modules.
+
+The database schema is managed by Alembic, never by create_all at startup.
+"""
 from fastapi import FastAPI
-from app.api.v1.policies import router
-from app.db.session import Base, engine
-from app.models.policy import PolicyRecord  # noqa: F401 - registers table
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
+from app.api.v1.policies import router as policies_router
+from app.api.v1.operations import router as operations_router
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Development bootstrap only. Replace with Alembic migrations before production.
-    Base.metadata.create_all(bind=engine)
-    yield
+app = FastAPI(title="LLNet Policy Manager", version="0.2.0-dev.1", docs_url=None)
+app.include_router(policies_router)
+app.include_router(operations_router)
 
-app = FastAPI(title="LLNet Policy Manager", version="0.1.0", lifespan=lifespan , docs_url=None)
-app.include_router(router)
-
-app.mount(
-    "/static",
-    StaticFiles(directory="app/static"),
-    name="static"
-)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
 @app.get("/docs", include_in_schema=False)
@@ -31,6 +24,8 @@ def custom_swagger_ui():
         swagger_css_url="/static/swagger-ui.css",
     )
 
-@app.get("/health")
+
+@app.get("/health", tags=["Health"])
 def health():
+    # Liveness only; readiness check will be introduced with the dispatcher.
     return {"status": "ok"}

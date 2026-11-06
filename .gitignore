@@ -8,3 +8,5 @@ policy-manager/data/
 *.db
 .coverage
 htmlcov/
+backups/
+*.dump
