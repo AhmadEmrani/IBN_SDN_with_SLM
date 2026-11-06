@@ -1,25 +1,41 @@
-# LLNet Policy Manager — Stage 1
+# LLNet — SDN Policy Manager v0.2 (Stage 2)
 
-This is an **incremental reference overlay** for an existing Docker Ryu/Mininet project. Back up your original files before overwriting them. No database volume is removed by these commands.
+A modular, research-oriented SDN policy lifecycle built with FastAPI, PostgreSQL, Ryu, Mininet and OpenFlow 1.3.
 
-## Start
+## Stage 2 quick start
 
-1. Copy `.env.example` to `.env`, change the password (use URL-safe characters for the first run).
-2. `docker compose up -d --build`
-3. `docker exec -it mininet-net bash` and then `python3 topology.py`; keep the Mininet CLI running.
-4. Verify Ryu connectivity: `docker exec llnet-policy-api python -c "import httpx; print(httpx.get('http://ryu-controller:8080/stats/switches').json())"` (expect `[1]`).
-5. Open `http://localhost:8000/docs` and use **POST /api/v1/policies/validate**, then **/compile**, then **POST /api/v1/policies** with `contracts/examples/firewall-deny.json`.
-6. Test in Mininet: `h1 ping -c 3 h2` should pass, `h1 ping -c 3 h3` should fail. Verify using `dpctl dump-flows -O OpenFlow13`.
-7. Use **DELETE /api/v1/policies/{id}**, then test `h1 ping -c 3 h3` again.
+Apply `LLNet_v0.2_Stage2_Overlay.zip` on top of the already-migrated Stage 1 tree. Then:
 
-## Scope & limitations
+```bash
+docker compose build policy-api
+docker compose stop policy-api
+docker compose run --rm --no-deps policy-api alembic upgrade head
+docker compose run --rm --no-deps policy-api python scripts/verify_migration.py
+docker compose run --rm --no-deps policy-api python -m unittest discover -s tests -p 'test_v02_*.py' -v
+docker compose up -d --no-deps policy-api
+```
 
-- v1 supports IPv4 DENY only, with optional TCP/UDP port lists for **unidirectional** policies.
-- Existing hardcoded firewall rules were removed from `controller.py`; this is necessary for dynamic deletion tests.
-- A newly created policy is checked against active/failed records. Overlapping IP/protocol and switch scopes are conservatively rejected, regardless of port separation.
-- Ryu REST is internal-only. API bound to localhost. **No authentication** is built into this lab version.
-- `Base.metadata.create_all` initializes a development DB. Alembic migrations, PATCH/disable, timed rules, background reconciliation, authentication, and atomic multi-switch deployment are deliberately postponed.
-- OpenFlow REST add returns before definitive device confirmation. The API reads flow stats but this is not a complete Barrier/transaction/traffic-proof guarantee. Controller restarts can erase installed rules; the status endpoint detects drift but does not auto-repair it.
-- Avoid concurrent policy creation in this version; transactional exclusion and recovery of failures need subsequent work.
-- Run local unit tests from `policy-manager`: `pip install -r requirements.txt pytest && PYTHONPATH=. pytest -q`.
-- `/health` is application liveness, not DB/Ryu readiness.
+The expected Alembic revision is `0002_v02_lifecycle`.
+
+## Policy lifecycle
+
+- Submit policy JSON via `POST /api/v1/policies` with `Idempotency-Key: ...`.
+- FastAPI returns `HTTP 202` and a `pending` operation without touching Ryu.
+- Execute the operation explicitly in the lab via:
+
+```bash
+docker compose exec policy-api python -m app.cli.run_operation '<operation_id>'
+```
+
+- Read execution result and append-only events at `/api/v1/operations/{operation_id}` and `/api/v1/operations/{operation_id}/events`.
+- Manage revisions through `PATCH /api/v1/policies/{id}` with `If-Match`, or enable/disable/delete commands with their own Idempotency Keys.
+
+**The CLI is temporary:** Stage 3 adds Airflow LocalExecutor and dispatcher, without putting policy business logic inside the DAG. Stage 4 adds independent reconciliation and failure injection in real Mininet/OVS.
+
+## Design documents
+
+- `APPLY_STAGE2_FA.md`: detailed Persian setup and test steps.
+- `docs/architecture.md`: deployed architecture and boundaries.
+- `docs/llnet-v02-stage2-operation-engine.md`: schema, API, state transitions and known limitations.
+
+**Security:** no production authentication yet. Run only in a trusted localhost laboratory. No guarantees of atomic multi-switch updates or exactly-once execution across external OpenFlow side effects.

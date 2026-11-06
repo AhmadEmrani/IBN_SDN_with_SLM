@@ -1,11 +1,18 @@
+"""Policy aggregate. Legacy fields remain for compatibility with the SDN adapter.
+
+Committed desired state changes only after execution verifies success.
+The operation row represents changes pending approval/deployment.
+"""
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, BigInteger, Integer
+from sqlalchemy import String, DateTime, BigInteger, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 from app.db.session import Base
 
+
 class PolicyRecord(Base):
     __tablename__ = "policies"
+
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     revision: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     cookie: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True)
@@ -15,3 +22,15 @@ class PolicyRecord(Base):
     last_error: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Committed desired state is updated only after a successful operation.
+    applied_state: Mapped[str] = mapped_column(String(16), nullable=False, server_default="unknown")
+
+    # Added in v0.2 stage 1; nullable pointers support legacy writes during migration.
+    desired_state: Mapped[str] = mapped_column(String(16), nullable=False, server_default="enabled")
+    desired_revision_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("policy_revisions.id", name="fk_policies_desired_revision", use_alter=True), nullable=True
+    )
+    applied_revision_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("policy_revisions.id", name="fk_policies_applied_revision", use_alter=True), nullable=True
+    )
