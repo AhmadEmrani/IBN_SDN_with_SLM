@@ -1,7 +1,7 @@
-"""Legacy PolicyRecord with additive v0.2 desired/applied revision pointers.
+"""Policy aggregate. Legacy fields remain for compatibility with the SDN adapter.
 
-The v0.1 API remains operational during stage 1. New v0.2 workflows are
-introduced in subsequent stages; do not infer deployed state from these fields.
+Committed desired state changes only after execution verifies success.
+The operation row represents changes pending approval/deployment.
 """
 from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, BigInteger, Integer, ForeignKey
@@ -22,6 +22,9 @@ class PolicyRecord(Base):
     last_error: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Committed desired state is updated only after a successful operation.
+    applied_state: Mapped[str] = mapped_column(String(16), nullable=False, server_default="unknown")
 
     # Added in v0.2 stage 1; nullable pointers support legacy writes during migration.
     desired_state: Mapped[str] = mapped_column(String(16), nullable=False, server_default="enabled")

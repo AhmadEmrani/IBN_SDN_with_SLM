@@ -1,4 +1,4 @@
-"""Read-only DB sanity checks after applying Alembic 0001.
+"""Read-only DB sanity checks after applying Alembic Stage 2 (0002).
 
 Usage inside policy-api image: python scripts/verify_migration.py
 """
@@ -7,7 +7,7 @@ from app.config import DATABASE_URL
 
 TABLES = {
     "policies", "policy_revisions", "policy_operations", "operation_events",
-    "flow_deployments", "outbox_events", "api_request_events", "alembic_version",
+    "flow_deployments", "outbox_events", "api_request_events", "alembic_version", "scope_reservations",
 }
 
 
@@ -19,7 +19,7 @@ def main():
         if missing:
             raise SystemExit(f"FAIL: missing tables: {sorted(missing)}")
         version = conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-        if version != "0001_v02_foundation":
+        if version != "0002_v02_lifecycle":
             raise SystemExit(f"FAIL: unexpected schema version {version}")
         policy_count = conn.execute(text("SELECT count(*) FROM policies")).scalar_one()
         imported_count = conn.execute(text("SELECT count(*) FROM policy_revisions")).scalar_one()
@@ -35,7 +35,7 @@ def main():
         print(f"Null desired revision pointers: {missing_revisions} | broken pointers: {missing_targets}")
         if missing_revisions or missing_targets or imported_count < policy_count:
             raise SystemExit("FAIL: incomplete historical import")
-        print("PASS: v0.2 foundation tables and imported legacy policy definitions")
+        print("PASS: v0.2 stage2 tables and policy revision pointers")
     engine.dispose()
 
 

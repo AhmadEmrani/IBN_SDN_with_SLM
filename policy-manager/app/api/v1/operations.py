@@ -1,4 +1,4 @@
-"""Read-only durable operation and event lookup; writes arrive in stage 2."""
+"""Read-only durable operation and event lookup; mutations live in command modules."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,6 +17,9 @@ def get_operation(operation_id: str, db: Session = Depends(get_db)):
     return {
         "id": operation.id, "policy_id": operation.policy_id,
         "operation_type": operation.operation_type, "status": operation.status,
+        "requested_state": operation.requested_state,
+        "requested_revision_id": operation.requested_revision_id,
+        "base_revision_id": operation.base_revision_id,
         "attempt_count": operation.attempt_count,
         "error_code": operation.error_code, "error_message": operation.error_message,
         "airflow_run_id": operation.airflow_run_id,

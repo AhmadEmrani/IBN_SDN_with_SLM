@@ -38,6 +38,7 @@ def stage_operation(
     request_payload: dict,
     requested_revision_id: str | None = None,
     base_revision_id: str | None = None,
+    request_hash: str | None = None,
 ) -> StagedOperation:
     """Stage records in an existing transaction; never commit here.
 
@@ -48,8 +49,8 @@ def stage_operation(
     if not requester_id or not idempotency_key:
         raise ValueError("requester_id and idempotency_key are required")
 
-    request_hash = sha256_json({"operation_type": operation_type, "policy_id": policy_id, "payload": request_payload,
-                               "requested_revision_id": requested_revision_id, "base_revision_id": base_revision_id})
+    request_hash = request_hash or sha256_json({"operation_type": operation_type, "policy_id": policy_id, "payload": request_payload,
+                                                "requested_revision_id": requested_revision_id, "base_revision_id": base_revision_id})
     existing = db.scalar(select(PolicyOperation).where(
         PolicyOperation.requester_id == requester_id,
         PolicyOperation.idempotency_key == idempotency_key,
@@ -59,22 +60,48 @@ def stage_operation(
             raise IdempotencyPayloadMismatch("Idempotency key has a different request payload")
         return StagedOperation(existing, False)
 
+    
     op_id = str(uuid4())
+
     operation = PolicyOperation(
-        id=op_id, policy_id=policy_id, operation_type=operation_type,
-        requested_revision_id=requested_revision_id, base_revision_id=base_revision_id,
-        requester_id=requester_id, idempotency_key=idempotency_key,
-        request_hash=request_hash, status="pending", attempt_count=0,
+        id=op_id,
+        policy_id=policy_id,
+        operation_type=operation_type,
+        requested_revision_id=requested_revision_id,
+        base_revision_id=base_revision_id,
+        requester_id=requester_id,
+        idempotency_key=idempotency_key,
+        request_hash=request_hash,
+        status="pending",
+        attempt_count=0,
     )
+
+    # STEP 1: Insert parent operation first.
+    # flush() does NOT commit the transaction.
+    db.add(operation)
+    db.flush()
+
+    # STEP 2: Insert dependent records.
     event = OperationEvent(
-        id=str(uuid4()), operation_id=op_id,
-        event_type="operation.submitted", step_name="submit", attempt_no=1,
+        id=str(uuid4()),
+        operation_id=op_id,
+        event_type="operation.submitted",
+        step_name="submit",
+        attempt_no=1,
         details={"operation_type": operation_type},
     )
+
     outbox = OutboxEvent(
-        id=str(uuid4()), operation_id=op_id, event_type="policy.operation.requested",
-        payload={"operation_id": op_id}, dispatch_status="pending", attempts=0,
+        id=str(uuid4()),
+        operation_id=op_id,
+        event_type="policy.operation.requested",
+        payload={"operation_id": op_id},
+        dispatch_status="pending",
+        attempts=0,
     )
-    db.add_all([operation, event, outbox])
+
+    db.add_all([event, outbox])
     db.flush()
+
     return StagedOperation(operation, True)
+

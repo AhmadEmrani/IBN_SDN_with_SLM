@@ -7,8 +7,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from app.api.v1.policies import router as policies_router
 from app.api.v1.operations import router as operations_router
+from app.api.audit import audit_failed_requests
 
-app = FastAPI(title="LLNet Policy Manager", version="0.2.0-dev.1", docs_url=None)
+app = FastAPI(title="LLNet Policy Manager", version="0.2.0-dev.2", docs_url=None)
+app.middleware("http")(audit_failed_requests)
 app.include_router(policies_router)
 app.include_router(operations_router)
 

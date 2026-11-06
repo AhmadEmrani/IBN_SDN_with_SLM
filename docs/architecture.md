@@ -1,64 +1,26 @@
-# LLNet — implementation architecture
+# LLNet architecture — v0.2 Stage 2
 
-Last updated: LLNet v0.2 stage 1 (data foundation). Do not confuse the
-implemented system with the approved architecture targeted for later stages.
+## Running lab
 
-## Currently implemented
+- `mininet-net`: Mininet/OVS network with h1–h3 and OpenFlow13 switch s1.
+- `ryu-controller`: Ryu MAC-learning controller with `ryu.app.ofctl_rest`.
+- `policy-api`: FastAPI, Pydantic validation, policy compilation, durable operation staging, read/query endpoints and temporary operator-only CLI execution.
+- `postgres`: PostgreSQL 16, application-authoritative policy and operation state; schema managed by Alembic.
 
-- OpenFlow 1.3 Ryu learning-switch controller in `controller.py`.
-- Open vSwitch in the Mininet topology (`topology.py`).
-- FastAPI Policy Manager in `policy-manager/app`, with v0.1 synchronous
-  `POST /api/v1/policies` and `DELETE /api/v1/policies/{policy_id}`.
-- PostgreSQL 16, SQLAlchemy and JSONB.
-- Ryu OpenFlow REST via `ryu.app.ofctl_rest`: `/stats/switches`,
-  `/stats/flowentry/add`, `/stats/flowentry/delete_strict`, `/stats/flow/{dpid}`.
-- Policy schema v1 for IPv4 deny and a pure dry-run Flow compiler.
-- Offline Swagger UI assets at `/docs`.
-- Stage-1 Alembic schema and imported legacy revisions, operation/outbox
-  models and read-only operation queries.
+No Airflow services are running in Stage 2. Airflow LocalExecutor and a dispatcher are planned for Stage 3; reconciliation remains Stage 4.
 
-**NOT IMPLEMENTED YET:** Airflow, Dispatcher, async operation writes, explicit
-transactional reservations, automatic Reconciler, complete rollback, internal
-service authentication and rigorous cross-switch atomic deployment.
+## Control path
 
-## Approved target architecture
+1. Public command (Create/Update/Enable/Disable/Delete) receives an `Idempotency-Key` and records a `pending` operation, first event, outbox envelope, and switch-scope reservation in one PostgreSQL transaction. Response is HTTP 202.
+2. A **manual lab worker** is invoked with the returned operation ID: `python -m app.cli.run_operation <operation_id>`.
+3. The worker claims the operation lease, builds a deployment plan from the immutable revision and existing committed policy, performs preflight, sends Ryu FlowMods, verifies observed flow stats, and attempts compensation on failure.
+4. The worker atomically records operation outcome, deployment state and audit event; successful/cleanly-failed operations release scope reservations. Ambiguous states remain unresolved and locked.
+5. Read endpoints expose the operation/events and committed policy state separately.
 
-```text
-Human / future SLM
-       |
-   FastAPI (business logic + authorization)
-       |                         |
-   PostgreSQL                operation engine
-   - policy revisions            |
-   - operations                  v
-   - audit / evidence       Ryu REST adapter -> Ryu -> OVS
-   - outbox events                ^
-       |                          |
-  Dispatcher -> Airflow DAG -> internal operation APIs
-       |
-  Independent reconciler reads desired/actual state and repairs drift
-```
+## Future AI boundary
 
-PostgreSQL is the operational source of truth; Airflow metadata is separate.
-Ryu/OVS observations are required to verify actual installation. An HTTP 200
-from Ryu does not prove successful installation of a rule.
+The SLM generates proposed Policy JSON only. It will NOT invoke Ryu or Airflow directly. The same Pydantic validation, conflict checks, compilation and idempotent command API protect manual and SLM-generated intents.
 
-## Stage 1 compatibility notes
+## More information
 
-The original `policies.status` column remains to serve legacy API calls. The
-new `desired_state`, `desired_revision_id` and `applied_revision_id` are
-populated for **imported historical policies**, but v0.1 write operations
-will not yet update all v0.2 structures. A future transition step must
-backfill any such writes before enabling the async operation API.
-
-## Future steps
-
-1. Stage 2: versioned policy writes, scope reservations, lifecycle API and
-   transactional outbox submission in one DB transaction.
-2. Stage 3: Airflow LocalExecutor, authenticated internal operations and
-   outbox Dispatcher.
-3. Stage 4: independent reconciler, evidence-backed compensation and fault
-   injection tests.
-4. Freeze stable v0.2 contracts before integrating the SLM intent converter.
-
-See `docs/llnet-v02-stage1-foundation.md` for migration details.
+See `docs/llnet-v02-stage2-operation-engine.md` and `APPLY_STAGE2_FA.md`.

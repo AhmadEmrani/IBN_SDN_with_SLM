@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "policy": {
+    "name": "Stage 2 - Block h2 and h3",
+    "type": "firewall",
+    "enabled": true,
+    "priority": 100
+  },
+  "scope": {
+    "network_id": "mininet-lab",
+    "switches": [
+      "1"
+    ]
+  },
+  "match": {
+    "source": {
+      "type": "ipv4",
+      "value": "10.0.0.2/32"
+    },
+    "destination": {
+      "type": "ipv4",
+      "value": "10.0.0.3/32"
+    },
+    "direction": "bidirectional",
+    "protocol": "any",
+    "source_ports": null,
+    "destination_ports": null
+  },
+  "action": {
+    "type": "deny",
+    "parameters": {}
+  },
+  "constraints": {
+    "start_at": null,
+    "end_at": null
+  },
+  "metadata": {
+    "source": "manual",
+    "tags": [
+      "firewall",
+      "stage2"
+    ],
+    "reason": "Stage-2 asynchronous policy lifecycle integration test"
+  }
+}
