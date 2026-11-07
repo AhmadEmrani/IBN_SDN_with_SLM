@@ -28,7 +28,9 @@ def observed_flows(dpid: int) -> list[dict]:
             response = client.get(f"{RYU_URL}/stats/flow/{dpid}")
             response.raise_for_status()
             data = response.json()
-            return data.get(str(dpid), [])
+            if not isinstance(data, dict) or not isinstance(data.get(str(dpid)), list):
+                raise RyuError("Malformed flow-stats response (missing switch or flow list)")
+            return data[str(dpid)]
     except (httpx.HTTPError, ValueError, TypeError) as exc:
         raise RyuError(str(exc)) from exc
 
@@ -36,84 +38,49 @@ def add_flow(flow: dict):
     _post("/stats/flowentry/add", flow)
 
 def delete_flow(flow: dict):
-    # Exact priority+match; cookie is an additional ownership safeguard.
     _post("/stats/flowentry/delete_strict", {
         "dpid": flow["dpid"], "table_id": flow["table_id"],
         "priority": flow["priority"], "match": flow["match"],
         "cookie": flow["cookie"], "cookie_mask": 0xFFFFFFFFFFFFFFFF
     })
 
-
-# Equivalent OpenFlow field names returned by Ryu
 FIELD_ALIASES = {
-    "dl_type": "eth_type",
-    "nw_src": "ipv4_src",
-    "nw_dst": "ipv4_dst",
-    "nw_proto": "ip_proto",
-    "tp_src": "transport_src",
-    "tp_dst": "transport_dst",
+    "dl_type": "eth_type", "nw_src": "ipv4_src",
+    "nw_dst": "ipv4_dst", "nw_proto": "ip_proto",
+    "tp_src": "transport_src", "tp_dst": "transport_dst",
 }
 
 
 def _normalize_match(match: dict) -> dict:
     normalized = {}
-
     for key, value in match.items():
         canonical_key = FIELD_ALIASES.get(key, key)
-
         if canonical_key in ("ipv4_src", "ipv4_dst"):
-            # Compare network meaning, not string formatting
-            normalized[canonical_key] = ipaddress.ip_network(
-                str(value), strict=False
-            )
-
+            normalized[canonical_key] = ipaddress.ip_network(str(value), strict=False)
         elif canonical_key in (
-            "eth_type", "ip_proto", "tcp_src", "tcp_dst",
-            "udp_src", "udp_dst", "transport_src", "transport_dst",
-            "in_port"
+            "eth_type", "ip_proto", "tcp_src", "tcp_dst", "udp_src", "udp_dst",
+            "transport_src", "transport_dst", "in_port"
         ):
             normalized[canonical_key] = int(value)
-
         else:
             normalized[canonical_key] = value
-
     return normalized
 
 
 def flow_present(expected: dict) -> bool:
     expected_match = _normalize_match(expected["match"])
-
     for observed in observed_flows(expected["dpid"]):
-
         if int(observed.get("cookie", -1)) != int(expected["cookie"]):
             continue
-
-        if int(observed.get("priority", -1)) != int(
-            expected["priority"]
-        ):
+        if int(observed.get("priority", -1)) != int(expected["priority"]):
             continue
-
-        if int(observed.get("table_id", -1)) != int(
-            expected["table_id"]
-        ):
+        if int(observed.get("table_id", -1)) != int(expected["table_id"]):
             continue
-
-        actual_match = _normalize_match(
-            observed.get("match", {})
-        )
-
-        if not all(
-            key in actual_match and actual_match[key] == value
-            for key, value in expected_match.items()
-        ):
+        actual_match = _normalize_match(observed.get("match", {}))
+        if not all(key in actual_match and actual_match[key] == value for key, value in expected_match.items()):
             continue
-
-        # Verify that an expected DROP flow is actually DROP
         if expected.get("actions") == []:
             if observed.get("actions") != []:
                 continue
-
         return True
-
     return False
-

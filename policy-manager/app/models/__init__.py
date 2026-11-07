@@ -11,3 +11,6 @@ __all__ = [
     "PolicyRecord", "PolicyRevision", "PolicyOperation", "OperationEvent",
     "APIRequestEvent", "FlowDeployment", "OutboxEvent", "ScopeReservation",
 ]
+
+from app.models.reconciliation import ReconciliationFinding
+__all__.append("ReconciliationFinding")
