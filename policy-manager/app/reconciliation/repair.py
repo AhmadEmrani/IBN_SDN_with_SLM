@@ -128,7 +128,8 @@ def check(finding_id: str, *, session_factory=None, adapter=ryu) -> RepairResult
     return RepairResult('eligible' if state == 'missing' else 'already_present', state)
 
 
-def _stage(factory, finding_id: str) -> str:
+def _stage(factory, finding_id: str, *, requester_id: str = 'system:reconciler',
+           idempotency_key: str | None = None) -> str:
     try:
         with factory.begin() as db:
             policy, row, finding, network_id, _ = _candidate(db, finding_id, lock=True)
@@ -137,8 +138,8 @@ def _stage(factory, finding_id: str) -> str:
                 id=op_id, policy_id=policy.id, operation_type='reconcile',
                 requested_revision_id=policy.applied_revision_id,
                 base_revision_id=policy.applied_revision_id,
-                requester_id='system:reconciler',
-                idempotency_key=f'{finding.id}:{uuid4().hex}',
+                requester_id=requester_id,
+                idempotency_key=idempotency_key or f'{finding.id}:{uuid4().hex}',
                 request_hash=sha256_json({'finding': finding.id, 'revision': policy.applied_revision_id}),
                 status='pending', requested_state='enabled', base_desired_state='enabled',
             )
@@ -227,10 +228,13 @@ def _finish(factory, *, operation_id: str, finding_id: str, token: str,
     return RepairResult(status, detail, operation_id)
 
 
-def apply(finding_id: str, *, session_factory=None, adapter=ryu, sleep=time.sleep) -> RepairResult:
-    """Single explicit operator action. No automatic or repeated repair."""
+def apply(finding_id: str, *, session_factory=None, adapter=ryu, sleep=time.sleep,
+          requester_id: str = 'system:reconciler',
+          idempotency_key: str | None = None) -> RepairResult:
+    """Safe one-flow repair; manual by default, or one idempotent auto trigger."""
     factory = session_factory or SessionLocal
-    operation_id = _stage(factory, finding_id)
+    operation_id = _stage(factory, finding_id, requester_id=requester_id,
+                          idempotency_key=idempotency_key)
     token, _ = _claim(factory, operation_id)
     if token is None:
         raise RepairRefused('Could not claim new repair operation')
