@@ -6,8 +6,8 @@
 x-airflow-env: &airflow-env
   AIRFLOW__CORE__EXECUTOR: LocalExecutor
   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:?Set AIRFLOW_DB_PASSWORD in .env}@airflow-db:5432/airflow
-  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
-  AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'False'
+  AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
   AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: llnet:admin
   AIRFLOW__API__BASE_URL: http://localhost:8081
   AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/shared/users.json
@@ -100,7 +100,7 @@ services:
 
   airflow-auth-init:
     image: python:3.11-alpine
-    user: "0:0"
+    user: '0:0'
     environment:
       AIRFLOW_LAB_PASSWORD: ${AIRFLOW_LAB_PASSWORD:?Set required Stage3 secret in .env}
     volumes:
@@ -135,7 +135,7 @@ services:
     volumes: *airflow-volumes
     command: ["airflow", "api-server"]
     ports:
-      - "127.0.0.1:8081:8080"
+      - '127.0.0.1:8081:8080'
     depends_on:
       airflow-init:
         condition: service_completed_successfully
@@ -184,11 +184,27 @@ services:
         condition: service_started
     networks: [sdn-net]
 
+  policy-reconciler:
+    build:
+      context: ./policy-manager
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-llnet}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-llnet}
+      RYU_URL: http://ryu-controller:8080
+    command: ["python", "-m", "app.cli.observe_flows", "--interval", "15"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ryu-controller:
+        condition: service_started
+    networks: [sdn-net]
+
 volumes:
   postgres_data:
   airflow_db_data:
   airflow_logs:
   airflow_auth:
+
 
 networks:
   sdn-net:
