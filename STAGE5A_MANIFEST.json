@@ -1,0 +1,55 @@
+{
+  "bundle": "LLNet Stage5A contract v1 reboot",
+  "baseline_commit": "5736be03b16b0ad84fd2acf56005f4303837f5c3",
+  "mode": "additive contracts fixtures docs and offline validator",
+  "files": [
+    {
+      "path": "APPLY_STAGE5A_FA.md",
+      "sha256": "f09d7dbc777b17730417b427c2a54987a8549095c9149b9983589bb3501f62b5"
+    },
+    {
+      "path": "contracts/intent-v1/capabilities.json",
+      "sha256": "da810a709024dc677ad4f3c016c056ae098d4aa280d7f3e27e4ca7d848a90d8d"
+    },
+    {
+      "path": "contracts/intent-v1/model-result.schema.json",
+      "sha256": "789567e94a6e366dec6aea0d8200119614986bdc30be7fe02396a04dea441aac"
+    },
+    {
+      "path": "contracts/intent-v1/translate-request.schema.json",
+      "sha256": "88093d54dddf137873d9dcdf3fc74f45a1d7c1849ba389b5f704715e59b6dde6"
+    },
+    {
+      "path": "data/intents/stage5a/README.md",
+      "sha256": "6a8a46e37fab4580caeadee3c5a16e830e794b8ac6ad1ea81b6925c9336059aa"
+    },
+    {
+      "path": "data/intents/stage5a/firewall-contract-seed.jsonl",
+      "sha256": "bd6a633a8eb0a1fe8d1d7ce33f04cd1ff879d791f2e0e304c8cab803e7eadab1"
+    },
+    {
+      "path": "data/intents/stage5a/network-context.json",
+      "sha256": "8d33734767810627587101a45c274ac9021a13f3a68e5f7c883c22513822ee17"
+    },
+    {
+      "path": "docs/llnet-stage5a-intent-contract.md",
+      "sha256": "6f9495030011418d1e868aba9b04459191fa45b952dfe35e4643351fc1102d2c"
+    },
+    {
+      "path": "prompts/intents/v1/assembly.md",
+      "sha256": "541a45801c3b6aae9731175b5448b2e08ed06693c828d01b935a78b5ab00fb26"
+    },
+    {
+      "path": "prompts/intents/v1/firewall.md",
+      "sha256": "44aba7a3af41fe1777c97fe38b51c5ba62f7732ac1f42894e5d71d464be0d356"
+    },
+    {
+      "path": "prompts/intents/v1/system.md",
+      "sha256": "4e315e4919e95d3d6ea0d6ab865ce2dab4d201ab95f0a888ef982f2002055397"
+    },
+    {
+      "path": "scripts/stage5a_validate.py",
+      "sha256": "020309465214df7237d7ffc0ec1cb9c103fac699c9aa96e4fb6b3307156cabe4"
+    }
+  ]
+}
