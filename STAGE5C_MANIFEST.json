@@ -1,0 +1,24 @@
+{
+  "stage": "5C",
+  "base": "Stage 5B, Stage 4C on main",
+  "mode": "additive only",
+  "files": [
+    {
+      "path": "policy-manager/app/intents/retrieval.py",
+      "sha256": "0c86992daee5509b817b6f7227e6a76744e07cf768ed2ec431afb88653839d72"
+    },
+    {
+      "path": "policy-manager/tests/test_v05c_retrieval.py",
+      "sha256": "efe682c0b9130c5fef5887f669629882d5e065c3444b130e98c591ad957f4712"
+    },
+    {
+      "path": "scripts/stage5c_retrieve.py",
+      "sha256": "e1eeebb4294114d6483c400184893801e65e832277dd7479830934c1db78a0bb"
+    },
+    {
+      "path": "requirements-stage5c.txt",
+      "sha256": "46b26629a312e3c64ccd601dd171e70647dc8bcdd8d4978d97f3e9f298eef14a"
+    }
+  ],
+  "notes": "BGE read-only local cosine retrieval; no pgvector, Phi, database, network writes, or deployment."
+}
