@@ -1,0 +1,27 @@
+{
+  "bundle": "LLNet Stage5B Adapter v1",
+  "base_commit": "5736be03b16b0ad84fd2acf56005f4303837f5c3",
+  "requires": "Stage5A Contract v1",
+  "files": [
+    {
+      "path": "APPLY_STAGE5B_FA.md",
+      "sha256": "3433e9f3a94cdfcd45085903f5db47d4316327bde886c3d84e000e3b25ac69fb"
+    },
+    {
+      "path": "docs/llnet-stage5b-adapter.md",
+      "sha256": "2afe96d3bd80edc41a83483197ffb016e9e46c494beb21bc7aaf1898c814061e"
+    },
+    {
+      "path": "policy-manager/app/intents/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "policy-manager/app/intents/adapter.py",
+      "sha256": "0efbeee618a0b97384c695777a52cc3aef401887e985683c7647a8e4ec4d568e"
+    },
+    {
+      "path": "policy-manager/tests/test_v05b_intent_adapter.py",
+      "sha256": "95bc9802b9189e09b421d2938e7c077f4fbe0159c7d020f57123caff9bca0a1d"
+    }
+  ]
+}

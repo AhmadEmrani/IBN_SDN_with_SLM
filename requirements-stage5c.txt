@@ -1,0 +1,2 @@
+# Optional local BGE inference (Stage 5C); intentionally NOT added to policy-api.
+sentence-transformers>=3.3,<6

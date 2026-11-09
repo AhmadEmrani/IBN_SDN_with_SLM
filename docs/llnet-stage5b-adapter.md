@@ -1,0 +1,7 @@
+# Stage 5B — Trusted resolver and backend PolicyInput adapter
+
+Pipeline (no side effects): `expected_model_result` (Stage5A oracle) -> strict JSON Schema -> capability gate -> trusted network context -> IPv4 endpoint resolution -> existing Pydantic PolicyInput -> existing deterministic flow compiler (dry-run). The caller owns intent_id, network_id and trusted context; Phi must not invent policy scope, cookies or priority. All 20 fixture outputs are checked against Stage5A expected policies, plus negative safety tests.
+
+`fixture_only` network context never passes the default runtime path. It is explicitly allowed only in offline tests. No API route, DB migration, Ryu call, or Mininet operation is added here. This does not benchmark model inference: Stage5A values are *reference answers*, not generated inference. Stage5C adds retrieval; subsequent work connects a model and authoritative inventory to the backend through a separately secured, validated API. Ensure the backend service/container mounts contracts when implementing that API; current Dockerfile does not include repository-root contracts.
+
+Notes: malicious natural-language instructions cannot override schemas, but full prompt-injection resistance must be evaluated with model-generated results later. The adapter is not an access-control mechanism or authorization for deployment. No Digital Twin simulation takes place in 5B.

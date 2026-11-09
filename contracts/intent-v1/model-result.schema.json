@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLNet intent model result v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "const": "ready"
+        },
+        "capability": {
+          "const": "firewall"
+        },
+        "proposal": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "destination": {
+              "type": "string",
+              "minLength": 1
+            },
+            "direction": {
+              "enum": [
+                "unidirectional",
+                "bidirectional"
+              ]
+            },
+            "protocol": {
+              "enum": [
+                "any",
+                "tcp",
+                "udp",
+                "icmp"
+              ]
+            },
+            "source_ports": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  }
+                }
+              ]
+            },
+            "destination_ports": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  }
+                }
+              ]
+            },
+            "action": {
+              "const": "deny"
+            }
+          },
+          "required": [
+            "source",
+            "destination",
+            "direction",
+            "protocol",
+            "source_ports",
+            "destination_ports",
+            "action"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "protocol": {
+                    "enum": [
+                      "any",
+                      "icmp"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "source_ports": {
+                    "type": "null"
+                  },
+                  "destination_ports": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "direction": {
+                    "const": "bidirectional"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "source_ports": {
+                    "type": "null"
+                  },
+                  "destination_ports": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "clarification": {
+          "type": "null"
+        },
+        "reason_code": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "contract_version",
+        "status",
+        "capability",
+        "proposal",
+        "clarification",
+        "reason_code"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "const": "needs_clarification"
+        },
+        "capability": {
+          "enum": [
+            "firewall",
+            "rate_limit",
+            "load_profile",
+            null
+          ]
+        },
+        "proposal": {
+          "type": "null"
+        },
+        "clarification": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason_code": {
+          "enum": [
+            "missing_destination",
+            "unknown_host",
+            "ambiguous_protocol",
+            "ambiguous_direction",
+            "invalid_port",
+            "unsupported_action",
+            "unsupported_ipv6",
+            "unsupported_schedule",
+            "unsupported_bidirectional_ports",
+            "capability_disabled",
+            "multiple_intents"
+          ]
+        }
+      },
+      "required": [
+        "contract_version",
+        "status",
+        "capability",
+        "proposal",
+        "clarification",
+        "reason_code"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "const": "unsupported"
+        },
+        "capability": {
+          "enum": [
+            "firewall",
+            "rate_limit",
+            "load_profile",
+            null
+          ]
+        },
+        "proposal": {
+          "type": "null"
+        },
+        "clarification": {
+          "type": "null"
+        },
+        "reason_code": {
+          "enum": [
+            "missing_destination",
+            "unknown_host",
+            "ambiguous_protocol",
+            "ambiguous_direction",
+            "invalid_port",
+            "unsupported_action",
+            "unsupported_ipv6",
+            "unsupported_schedule",
+            "unsupported_bidirectional_ports",
+            "capability_disabled",
+            "multiple_intents"
+          ]
+        }
+      },
+      "required": [
+        "contract_version",
+        "status",
+        "capability",
+        "proposal",
+        "clarification",
+        "reason_code"
+      ]
+    }
+  ]
+}

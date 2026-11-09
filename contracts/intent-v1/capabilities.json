@@ -1,0 +1,30 @@
+{
+  "contract_version": "1.0",
+  "capabilities": [
+    {
+      "id": "firewall",
+      "enabled": true,
+      "operations": [
+        "create"
+      ],
+      "actions": [
+        "deny"
+      ],
+      "backend_schema_version": "1.0",
+      "proposal_schema": "model-result.schema.json",
+      "prompt": "prompts/intents/v1/firewall.md"
+    },
+    {
+      "id": "rate_limit",
+      "enabled": false,
+      "proposal_schema": null,
+      "prompt": null
+    },
+    {
+      "id": "load_profile",
+      "enabled": false,
+      "proposal_schema": null,
+      "prompt": null
+    }
+  ]
+}

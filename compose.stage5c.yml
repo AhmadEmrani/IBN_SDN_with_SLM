@@ -1,0 +1,21 @@
+# Additive override: use with `-f docker-compose.yml -f compose.stage5c.yml`.
+services:
+  intent-retriever:
+    build:
+      context: .
+      dockerfile: Dockerfile.intent-retriever
+    environment:
+      HF_HOME: /var/cache/llnet/huggingface
+      LLNET_BGE_MODEL: BAAI/bge-small-en-v1.5
+      LLNET_RETRIEVAL_INDEX: /var/cache/llnet/index/firewall-v1.json
+    volumes:
+      - llnet_bge_models:/var/cache/llnet/huggingface
+      - llnet_retrieval_index:/var/cache/llnet/index
+    ports:
+      - "127.0.0.1:8092:8092"
+    restart: unless-stopped
+    networks: [sdn-net]
+
+volumes:
+  llnet_bge_models:
+  llnet_retrieval_index:

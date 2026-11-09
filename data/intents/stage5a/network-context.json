@@ -1,0 +1,18 @@
+{
+  "context_id": "lab-stage5a-v1",
+  "network_id": "lab",
+  "fixture_only": true,
+  "hosts": {
+    "h1": "10.0.0.1/32",
+    "h2": "10.0.0.2/32",
+    "h3": "10.0.0.3/32"
+  },
+  "switches": [
+    "1"
+  ],
+  "default_switches": [
+    "1"
+  ],
+  "default_priority": 100,
+  "note": "Fixture only; runtime must resolve authoritative inventory. Not live discovery."
+}
