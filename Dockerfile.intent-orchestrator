@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/workspace/policy-manager
+WORKDIR /workspace
+RUN pip install --no-cache-dir 'fastapi==0.115.12' 'uvicorn==0.34.2' 'httpx==0.28.1' 'jsonschema==4.23.0' \
+ && pip check
+COPY policy-manager/app/__init__.py /workspace/policy-manager/app/__init__.py
+COPY policy-manager/app/intents/__init__.py /workspace/policy-manager/app/intents/__init__.py
+COPY policy-manager/app/intents/orchestrator_api.py /workspace/policy-manager/app/intents/orchestrator_api.py
+COPY contracts/intent-v1/model-result.schema.json /workspace/contracts/intent-v1/model-result.schema.json
+COPY contracts/intent-v1/capabilities.json /workspace/contracts/intent-v1/capabilities.json
+COPY policy-manager/tests/test_v05d2_orchestrator.py /workspace/policy-manager/tests/test_v05d2_orchestrator.py
+EXPOSE 8094
+CMD ["uvicorn", "app.intents.orchestrator_api:app", "--host", "0.0.0.0", "--port", "8094"]
