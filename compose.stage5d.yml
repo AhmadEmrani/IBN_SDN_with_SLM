@@ -1,0 +1,37 @@
+# Stage 5D.1: independent Phi-3.5 inference service (no SDN deployment).
+services:
+  phi-inference:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    command:
+      - --model
+      - /models/phi-3.5-mini-instruct-q4_k_m.gguf
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8093'
+      - --ctx-size
+      - '8192'
+      - --n-predict
+      - '512'
+      - --threads
+      - '4'
+    volumes:
+      - ./models/llnet-phi:/models:ro
+    ports:
+      - '127.0.0.1:8093:8093'
+    restart: unless-stopped
+    networks: [sdn-net]
+
+  # Stage 5D.2: read-only BGE -> Phi -> JSON validation. No SDN execution.
+  intent-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.intent-orchestrator
+    environment:
+      LLNET_RETRIEVER_URL: http://intent-retriever:8092
+      LLNET_PHI_URL: http://phi-inference:8093
+      LLNET_PHI_TIMEOUT_SECONDS: '180'
+    ports:
+      - '127.0.0.1:8094:8094'
+    restart: unless-stopped
+    networks: [sdn-net]

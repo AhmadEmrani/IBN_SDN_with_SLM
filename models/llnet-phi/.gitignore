@@ -1,0 +1,4 @@
+# Never commit multi-GB model weights or intermediate downloads.
+*.gguf
+*.gguf.*
+*.part
