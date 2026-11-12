@@ -15,5 +15,6 @@ COPY contracts/intent-v1/capabilities.json /workspace/contracts/intent-v1/capabi
 COPY data/intents/stage5a/network-context.json /workspace/data/intents/stage5a/network-context.json
 COPY policy-manager/tests/test_v05d2_orchestrator.py /workspace/policy-manager/tests/test_v05d2_orchestrator.py
 COPY policy-manager/tests/test_v05d3_dry_run.py /workspace/policy-manager/tests/test_v05d3_dry_run.py
+COPY policy-manager/tests/test_v05d4_routing.py /workspace/policy-manager/tests/test_v05d4_routing.py
 EXPOSE 8094
 CMD ["uvicorn", "app.intents.dry_run_api:app", "--host", "0.0.0.0", "--port", "8094"]

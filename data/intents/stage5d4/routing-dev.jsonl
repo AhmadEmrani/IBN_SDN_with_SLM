@@ -1,0 +1,18 @@
+{"id": "dev-001", "text": "Deny traffic from h2 to h1 over UDP", "expected": "firewall"}
+{"id": "dev-002", "text": "Configure a packet-drop rule for h3", "expected": "firewall"}
+{"id": "dev-003", "text": "Block port 80 for h1", "expected": "firewall"}
+{"id": "dev-004", "text": "Disallow ICMP from h2", "expected": "firewall"}
+{"id": "dev-005", "text": "Cap the data transfer rate to 12 Mbps", "expected": "rate_limit"}
+{"id": "dev-006", "text": "Set the throughput ceiling for h3 to 7Mbps", "expected": "rate_limit"}
+{"id": "dev-007", "text": "Traffic policing at 30 megabits per second", "expected": "rate_limit"}
+{"id": "dev-008", "text": "Throttle the traffic from h1", "expected": "rate_limit"}
+{"id": "dev-009", "text": "Simulate network congestion with synthetic packets", "expected": "load_profile"}
+{"id": "dev-010", "text": "Create a burst traffic workload for experiments", "expected": "load_profile"}
+{"id": "dev-011", "text": "Generate a daily network utilisation pattern", "expected": "load_profile"}
+{"id": "dev-012", "text": "Run a varying-load benchmark scenario", "expected": "load_profile"}
+{"id": "dev-013", "text": "Block TCP from h1 and cap its bandwidth to 5 Mbps", "expected": "multiple"}
+{"id": "dev-014", "text": "Deny port 80 and generate a load test", "expected": "multiple"}
+{"id": "dev-015", "text": "Make my network better", "expected": "ambiguous"}
+{"id": "dev-016", "text": "Improve performance please", "expected": "ambiguous"}
+{"id": "dev-017", "text": "What time is it?", "expected": "unknown"}
+{"id": "dev-018", "text": "Tell me a story about a robot", "expected": "unknown"}

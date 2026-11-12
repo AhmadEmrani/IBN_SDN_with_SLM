@@ -1,7 +1,6 @@
-"""Stage 5D.2: read-only BGE -> Phi -> ModelResult validation.
+"""Stage 5D.4: optional BGE-based routing, BGE few-shots, Phi validation.
 
-This service deliberately imports no policy execution, DB, Airflow, or Ryu code.
-The firewall capability is supplied explicitly in 5D.2, not auto-classified.
+Read-only: never accesses policy submission, database, Airflow, Ryu or OVS.
 """
 from __future__ import annotations
 
@@ -23,19 +22,24 @@ PHI_URL = os.getenv("LLNET_PHI_URL", "http://phi-inference:8093").rstrip("/")
 TIMEOUT_SECONDS = float(os.getenv("LLNET_PHI_TIMEOUT_SECONDS", "180"))
 
 
+class RouteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=4000)
+
+
 class TranslateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     text: str = Field(min_length=1, max_length=4000)
-    capability: str = "firewall"  # Explicit v1 selection. NO automatic classifier yet.
+    capability: str | None = None  # Omitted => BGE capability routing; explicit remains supported.
     top_k: int = Field(default=3, ge=1, le=10)
 
 
-app = FastAPI(title="LLNet Stage 5D.2 Read-only Intent Orchestrator", version="0.5d2")
+app = FastAPI(title="LLNet Stage 5D.4 Read-only Intent Orchestrator", version="0.5d4")
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "mode": "read_only", "stage": "5d2"}
+    return {"status": "ok", "mode": "read_only", "stage": "5d4"}
 
 
 def _check_capability(capability: str) -> None:
@@ -96,18 +100,60 @@ def _compact_phi_messages(messages: list[dict]) -> list[dict]:
     return [{"role": "system", "content": rules + instruction}] + messages[1:]
 
 
+async def route_capability(text: str, client: httpx.AsyncClient) -> dict:
+    """Route using the existing BGE service. No Phi call in this path."""
+    try:
+        response = await client.post(RETRIEVER_URL + "/v1/route-candidates",
+                                     json={"text": text}, timeout=45.0)
+        response.raise_for_status()
+        route = response.json()
+        if (route.get("routing_status") not in
+                ("selected", "unsupported", "ambiguous", "unknown", "multiple")
+                or (route.get("routing_status") == "selected" and
+                    route.get("capability") != "firewall")):
+            raise ValueError("invalid routing result")
+        return route
+    except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=502, detail={"code": "router_unavailable_or_invalid"}) from exc
+
+
+@app.post("/v1/intents/route")
+async def route_api(request: RouteRequest):
+    async with httpx.AsyncClient() as client:
+        return await route_capability(request.text, client)
+
+
+def _abstained_translation(route: dict) -> dict:
+    status = route["routing_status"]
+    public_status = "needs_clarification" if status == "ambiguous" else "unsupported"
+    return {"status": public_status, "capability": route.get("capability"),
+            "model_result": None, "retrieved_example_ids": [], "validated": False,
+            "routing": route, "reason_code": route.get("reason_code"),
+            "clarification": ("Specify whether you want to block traffic, limit "
+                              "bandwidth, or simulate network load."
+                              if public_status == "needs_clarification" else None),
+            "deployment": "not_requested"}
+
+
 async def translate(request: TranslateRequest, client: httpx.AsyncClient) -> dict:
-    _check_capability(request.capability)
+    routing = None
+    capability = request.capability
+    if capability is None:
+        routing = await route_capability(request.text, client)
+        if routing["routing_status"] != "selected":
+            return _abstained_translation(routing)
+        capability = routing["capability"]
+    _check_capability(capability)
     try:
         retrieved = await client.post(
             RETRIEVER_URL + "/v1/prepare",
-            json={"text": request.text, "capability": request.capability, "top_k": request.top_k},
+            json={"text": request.text, "capability": capability, "top_k": request.top_k},
             timeout=45.0,
         )
         retrieved.raise_for_status()
         prepared = retrieved.json()
         messages = prepared["messages"]
-        if (prepared.get("capability") != request.capability
+        if (prepared.get("capability") != capability
                 or not isinstance(messages, list) or not messages
                 or not all(isinstance(m, dict) and m.get("role") in ("system", "user", "assistant")
                            and isinstance(m.get("content"), str) for m in messages)):
@@ -146,14 +192,15 @@ async def translate(request: TranslateRequest, client: httpx.AsyncClient) -> dic
     if finish_reason == "length":
         raise HTTPException(status_code=502, detail={"code": "phi_output_truncated"})
     result = _parse_model_json(raw_result)
-    _validate_result(result, request.capability)
+    _validate_result(result, capability)
     return {
         "status": result["status"],
-        "capability": request.capability,
+        "capability": capability,
         "model_result": result,
         "retrieved_example_ids": prepared.get("retrieved_example_ids", []),
         "validated": True,
         "deployment": "not_requested",
+        **({"routing": routing} if routing is not None else {}),
     }
 
 

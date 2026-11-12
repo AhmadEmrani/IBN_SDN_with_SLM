@@ -40,6 +40,9 @@ async def dry_run(request: DryRunRequest, client: httpx.AsyncClient) -> dict:
         "compiled_flows": [],
         "context_source": None,
         "deployment": "not_requested",
+        **({"routing": translation["routing"]} if "routing" in translation else {}),
+        **({"reason_code": translation["reason_code"]} if "reason_code" in translation else {}),
+        **({"clarification": translation["clarification"]} if "clarification" in translation else {}),
     }
     # A non-ready inference cannot yield a policy, and should not need inventory.
     if status != "ready":
