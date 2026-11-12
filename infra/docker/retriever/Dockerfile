@@ -22,4 +22,4 @@ COPY policy-manager/tests/test_v05c_retriever_api.py /workspace/policy-manager/t
 COPY policy-manager/tests/test_v05d4_bge_routing.py /workspace/policy-manager/tests/test_v05d4_bge_routing.py
 RUN mkdir -p /var/cache/llnet/huggingface /var/cache/llnet/index
 EXPOSE 8092
-CMD ["uvicorn", "app.intents.routing_api:app", "--host", "0.0.0.0", "--port", "8092"]
+CMD ["uvicorn", "app.intents.retriever_app:app", "--host", "0.0.0.0", "--port", "8092"]
