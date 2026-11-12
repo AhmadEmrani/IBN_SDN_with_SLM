@@ -16,5 +16,6 @@ COPY policy-manager/tests/test_v05d2_orchestrator.py /workspace/policy-manager/t
 COPY policy-manager/tests/test_v05d3_dry_run.py /workspace/policy-manager/tests/test_v05d3_dry_run.py
 COPY policy-manager/tests/test_v05d4_routing.py /workspace/policy-manager/tests/test_v05d4_routing.py
 COPY policy-manager/tests/test_intent_architecture.py /workspace/policy-manager/tests/test_intent_architecture.py
+COPY policy-manager/tests/test_capability_boundaries.py /workspace/policy-manager/tests/test_capability_boundaries.py
 EXPOSE 8094
 CMD ["uvicorn", "app.intents.intent_app:app", "--host", "0.0.0.0", "--port", "8094"]

@@ -10,6 +10,7 @@ import httpx
 from fastapi import HTTPException
 from jsonschema import Draft202012Validator
 from app.intents.requests import TranslateRequest
+from app.intents.capability_registry import (require_enabled, CapabilityUnavailable, CapabilityConfigurationError)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA = PROJECT_ROOT / "contracts/intent-v1/model-result.schema.json"
@@ -19,13 +20,12 @@ PHI_URL = os.getenv("LLNET_PHI_URL", "http://phi-inference:8093").rstrip("/")
 TIMEOUT_SECONDS = float(os.getenv("LLNET_PHI_TIMEOUT_SECONDS", "180"))
 
 def _check_capability(capability: str) -> None:
-    entries = json.loads(REGISTRY.read_text(encoding="utf-8"))["capabilities"]
-    found = next((item for item in entries if item["id"] == capability), None)
-    if found is None:
-        raise HTTPException(status_code=422, detail={"code": "unknown_capability"})
-    if not found.get("enabled", False):
-        raise HTTPException(status_code=422, detail={"code": "capability_disabled"})
-
+    try:
+        require_enabled(capability)
+    except CapabilityUnavailable as exc:
+        raise HTTPException(status_code=422, detail={"code": str(exc)}) from exc
+    except CapabilityConfigurationError as exc:
+        raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc
 
 def _parse_model_json(raw: str) -> dict:
     # Reject decoration and multiple objects; no silent JSON repair.

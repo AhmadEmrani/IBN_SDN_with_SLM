@@ -11,6 +11,7 @@ import math
 import os
 from pathlib import Path
 from typing import Any, Callable
+from app.intents.capability_registry import require_enabled, CapabilityUnavailable, CapabilityConfigurationError
 
 ROOT = Path(__file__).resolve().parents[3]
 SEEDS = ROOT / 'data/intents/stage5a/firewall-contract-seed.jsonl'
@@ -31,17 +32,10 @@ def read_json(path: Path) -> dict:
 
 
 def capability_info(capability: str, registry_path: Path = REGISTRY) -> dict:
-    if not isinstance(capability, str):
-        raise RetrievalError('capability must be a string')
-    for entry in read_json(registry_path)['capabilities']:
-        if entry['id'] == capability:
-            if not entry.get('enabled', False):
-                raise RetrievalError('capability_disabled: ' + capability)
-            if not entry.get('prompt'):
-                raise RetrievalError('missing capability prompt')
-            return entry
-    raise RetrievalError('unknown_capability: ' + capability)
-
+    try:
+        return require_enabled(capability, path=registry_path)
+    except (CapabilityUnavailable, CapabilityConfigurationError) as exc:
+        raise RetrievalError(str(exc)) from exc
 
 def load_corpus(path: Path = SEEDS, *, capability: str = 'firewall',
                 registry_path: Path = REGISTRY) -> list[dict]:

@@ -13,6 +13,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 from app.schemas.policy import PolicyInput
 from app.services.compiler import compile_policy
+from app.intents.capability_registry import require_enabled, CapabilityUnavailable
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_PATH = PROJECT_ROOT / "contracts/intent-v1/model-result.schema.json"
@@ -80,15 +81,15 @@ def adapt_model_result(result: dict[str, Any], *, context: dict[str, Any], netwo
     errors = list(validator.iter_errors(result))
     if errors:
         raise IntentContractError("model-result schema invalid: " + errors[0].message)
-    registry = _schema(CAPABILITIES_PATH)
-    enabled = {entry["id"] for entry in registry["capabilities"] if entry.get("enabled")}
     status = result["status"]
     capability = result["capability"]
     if status != "ready":
         return {"status": status, "policy": None, "clarification": result["clarification"],
                 "reason_code": result["reason_code"]}
-    if capability not in enabled:
-        raise IntentContractError("capability_disabled")
+    try:
+        require_enabled(capability)
+    except CapabilityUnavailable as exc:
+        raise IntentContractError(str(exc)) from exc
     if not isinstance(intent_id, str) or not (1 <= len(intent_id) <= 64):
         raise IntentContractError("trusted intent_id required")
     hosts, switches, priority = _require_context(context, network_id, allow_fixture=allow_fixture)
