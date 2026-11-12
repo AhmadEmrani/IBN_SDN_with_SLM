@@ -1,0 +1,413 @@
+{
+  "stage": "5d4",
+  "split": "test",
+  "note": "Routing only; no Phi or SDN calls; real BGE API results",
+  "metrics": {
+    "evaluated": 27,
+    "failed_requests": 0,
+    "accuracy": 0.8519,
+    "macro_f1": 0.8418,
+    "false_firewall_routes": 0,
+    "non_firewall_total": 21,
+    "false_firewall_rate": 0.0,
+    "latency_ms_mean": 24.44,
+    "per_class": {
+      "firewall": {
+        "support": 6,
+        "precision": 1.0,
+        "recall": 0.8333,
+        "f1": 0.9091
+      },
+      "rate_limit": {
+        "support": 6,
+        "precision": 1.0,
+        "recall": 0.8333,
+        "f1": 0.9091
+      },
+      "load_profile": {
+        "support": 6,
+        "precision": 1.0,
+        "recall": 0.8333,
+        "f1": 0.9091
+      },
+      "multiple": {
+        "support": 3,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8
+      },
+      "ambiguous": {
+        "support": 3,
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1": 0.8571
+      },
+      "unknown": {
+        "support": 3,
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6667
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "test-001",
+      "text": "Deny all packets from h1 to h3",
+      "expected": "firewall",
+      "predicted": "firewall",
+      "routing_status": "selected",
+      "reason_code": null,
+      "scores": {
+        "firewall": 0.918758,
+        "rate_limit": 0.778244,
+        "load_profile": 0.647511
+      },
+      "latency_ms": 175.54
+    },
+    {
+      "id": "test-002",
+      "text": "Reject TCP connections to h2 on port 25",
+      "expected": "firewall",
+      "predicted": "firewall",
+      "routing_status": "selected",
+      "reason_code": null,
+      "scores": {
+        "firewall": 0.800231,
+        "rate_limit": 0.725032,
+        "load_profile": 0.580838
+      },
+      "latency_ms": 21.52
+    },
+    {
+      "id": "test-003",
+      "text": "Prevent ICMP from h3 to h2",
+      "expected": "firewall",
+      "predicted": "firewall",
+      "routing_status": "selected",
+      "reason_code": null,
+      "scores": {
+        "firewall": 0.792139,
+        "rate_limit": 0.693808,
+        "load_profile": 0.54687
+      },
+      "latency_ms": 22.83
+    },
+    {
+      "id": "test-004",
+      "text": "Create a blocking ACL for h1",
+      "expected": "firewall",
+      "predicted": "firewall",
+      "routing_status": "selected",
+      "reason_code": null,
+      "scores": {
+        "firewall": 0.747172,
+        "rate_limit": 0.637768,
+        "load_profile": 0.659019
+      },
+      "latency_ms": 19.85
+    },
+    {
+      "id": "test-005",
+      "text": "Drop UDP datagrams aimed at 10.0.0.3",
+      "expected": "firewall",
+      "predicted": "unknown",
+      "routing_status": "unknown",
+      "reason_code": "insufficient_semantic_evidence",
+      "scores": {
+        "firewall": 0.68451,
+        "rate_limit": 0.630906,
+        "load_profile": 0.614788
+      },
+      "latency_ms": 21.43
+    },
+    {
+      "id": "test-006",
+      "text": "Block traffic between h3 and h2",
+      "expected": "firewall",
+      "predicted": "firewall",
+      "routing_status": "selected",
+      "reason_code": null,
+      "scores": {
+        "firewall": 0.800721,
+        "rate_limit": 0.761556,
+        "load_profile": 0.698641
+      },
+      "latency_ms": 18.65
+    },
+    {
+      "id": "test-007",
+      "text": "Limit bandwidth to 9 Mbps on h1",
+      "expected": "rate_limit",
+      "predicted": "rate_limit",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.738469,
+        "rate_limit": 0.87632,
+        "load_profile": 0.731145
+      },
+      "latency_ms": 22.25
+    },
+    {
+      "id": "test-008",
+      "text": "Throttle h2 network traffic to 2Mbps",
+      "expected": "rate_limit",
+      "predicted": "rate_limit",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.768055,
+        "rate_limit": 0.880862,
+        "load_profile": 0.743454
+      },
+      "latency_ms": 20.22
+    },
+    {
+      "id": "test-009",
+      "text": "Set a maximum network rate of 900kbps",
+      "expected": "rate_limit",
+      "predicted": "rate_limit",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.635823,
+        "rate_limit": 0.780816,
+        "load_profile": 0.70971
+      },
+      "latency_ms": 19.87
+    },
+    {
+      "id": "test-010",
+      "text": "Apply QoS traffic shaping for h3 at 15 Mbps",
+      "expected": "rate_limit",
+      "predicted": "rate_limit",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.732716,
+        "rate_limit": 0.776341,
+        "load_profile": 0.745982
+      },
+      "latency_ms": 18.83
+    },
+    {
+      "id": "test-011",
+      "text": "Cap egress bit rate on s1",
+      "expected": "rate_limit",
+      "predicted": "unknown",
+      "routing_status": "unknown",
+      "reason_code": "insufficient_semantic_evidence",
+      "scores": {
+        "firewall": 0.585088,
+        "rate_limit": 0.679738,
+        "load_profile": 0.631466
+      },
+      "latency_ms": 21.2
+    },
+    {
+      "id": "test-012",
+      "text": "Reduce upload speed with a rate limiter",
+      "expected": "rate_limit",
+      "predicted": "rate_limit",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.642793,
+        "rate_limit": 0.741525,
+        "load_profile": 0.648331
+      },
+      "latency_ms": 20.79
+    },
+    {
+      "id": "test-013",
+      "text": "Generate bursty packet traffic for an experiment",
+      "expected": "load_profile",
+      "predicted": "load_profile",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.675176,
+        "rate_limit": 0.710604,
+        "load_profile": 0.82563
+      },
+      "latency_ms": 21.13
+    },
+    {
+      "id": "test-014",
+      "text": "Simulate a high-traffic peak on the topology",
+      "expected": "load_profile",
+      "predicted": "load_profile",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.60942,
+        "rate_limit": 0.694761,
+        "load_profile": 0.782038
+      },
+      "latency_ms": 20.22
+    },
+    {
+      "id": "test-015",
+      "text": "Build a test workload with gradual increasing demand",
+      "expected": "load_profile",
+      "predicted": "unknown",
+      "routing_status": "unknown",
+      "reason_code": "insufficient_semantic_evidence",
+      "scores": {
+        "firewall": 0.549823,
+        "rate_limit": 0.590177,
+        "load_profile": 0.717952
+      },
+      "latency_ms": 25.09
+    },
+    {
+      "id": "test-016",
+      "text": "Emulate a diurnal traffic pattern on h2",
+      "expected": "load_profile",
+      "predicted": "load_profile",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.695095,
+        "rate_limit": 0.69235,
+        "load_profile": 0.74323
+      },
+      "latency_ms": 21.86
+    },
+    {
+      "id": "test-017",
+      "text": "Run a background traffic generation test",
+      "expected": "load_profile",
+      "predicted": "load_profile",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.663779,
+        "rate_limit": 0.664462,
+        "load_profile": 0.794836
+      },
+      "latency_ms": 19.68
+    },
+    {
+      "id": "test-018",
+      "text": "Benchmark the lab under sustained synthetic load",
+      "expected": "load_profile",
+      "predicted": "load_profile",
+      "routing_status": "unsupported",
+      "reason_code": "capability_disabled",
+      "scores": {
+        "firewall": 0.539217,
+        "rate_limit": 0.62927,
+        "load_profile": 0.752961
+      },
+      "latency_ms": 21.05
+    },
+    {
+      "id": "test-019",
+      "text": "Block packets and throttle the link to 4Mbps",
+      "expected": "multiple",
+      "predicted": "multiple",
+      "routing_status": "multiple",
+      "reason_code": "multiple_intents",
+      "scores": {},
+      "latency_ms": 8.18
+    },
+    {
+      "id": "test-020",
+      "text": "Simulate heavy traffic while denying UDP from h1",
+      "expected": "multiple",
+      "predicted": "ambiguous",
+      "routing_status": "ambiguous",
+      "reason_code": "routing_conflict",
+      "scores": {
+        "firewall": 0.837852,
+        "rate_limit": 0.737129,
+        "load_profile": 0.760984
+      },
+      "latency_ms": 20.22
+    },
+    {
+      "id": "test-021",
+      "text": "Limit h2 to 5Mbps and create a load test",
+      "expected": "multiple",
+      "predicted": "multiple",
+      "routing_status": "multiple",
+      "reason_code": "multiple_intents",
+      "scores": {},
+      "latency_ms": 8.01
+    },
+    {
+      "id": "test-022",
+      "text": "Can you optimize the network?",
+      "expected": "ambiguous",
+      "predicted": "ambiguous",
+      "routing_status": "ambiguous",
+      "reason_code": "ambiguous_intent",
+      "scores": {},
+      "latency_ms": 8.99
+    },
+    {
+      "id": "test-023",
+      "text": "Make traffic faster",
+      "expected": "ambiguous",
+      "predicted": "ambiguous",
+      "routing_status": "ambiguous",
+      "reason_code": "ambiguous_intent",
+      "scores": {},
+      "latency_ms": 11.29
+    },
+    {
+      "id": "test-024",
+      "text": "Improve it somehow",
+      "expected": "ambiguous",
+      "predicted": "ambiguous",
+      "routing_status": "ambiguous",
+      "reason_code": "ambiguous_intent",
+      "scores": {},
+      "latency_ms": 7.54
+    },
+    {
+      "id": "test-025",
+      "text": "Write Python code to sort a list",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "routing_status": "unknown",
+      "reason_code": "out_of_scope",
+      "scores": {
+        "firewall": 0.473498,
+        "rate_limit": 0.433845,
+        "load_profile": 0.476199
+      },
+      "latency_ms": 20.85
+    },
+    {
+      "id": "test-026",
+      "text": "What is the weather forecast?",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "routing_status": "unknown",
+      "reason_code": "out_of_scope",
+      "scores": {
+        "firewall": 0.385224,
+        "rate_limit": 0.447636,
+        "load_profile": 0.488895
+      },
+      "latency_ms": 21.78
+    },
+    {
+      "id": "test-027",
+      "text": "Translate this sentence into French",
+      "expected": "unknown",
+      "predicted": "unknown",
+      "routing_status": "unknown",
+      "reason_code": "out_of_scope",
+      "scores": {
+        "firewall": 0.476126,
+        "rate_limit": 0.448641,
+        "load_profile": 0.491093
+      },
+      "latency_ms": 21.08
+    }
+  ]
+}

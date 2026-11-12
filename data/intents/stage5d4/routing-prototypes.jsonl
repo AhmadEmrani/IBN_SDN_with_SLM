@@ -1,0 +1,36 @@
+{"id": "firewall-01", "capability": "firewall", "text": "Block all TCP traffic from h1 to h2."}
+{"id": "firewall-02", "capability": "firewall", "text": "Deny UDP packets from h2 to h3."}
+{"id": "firewall-03", "capability": "firewall", "text": "Drop ICMP traffic sent by h3 to h1."}
+{"id": "firewall-04", "capability": "firewall", "text": "Prevent h1 from connecting to h3 on port 22."}
+{"id": "firewall-05", "capability": "firewall", "text": "Create an ACL to block traffic to 10.0.0.2."}
+{"id": "firewall-06", "capability": "firewall", "text": "Block all incoming packets from 10.0.0.1."}
+{"id": "firewall-07", "capability": "firewall", "text": "Deny outbound TCP connections to port 443."}
+{"id": "firewall-08", "capability": "firewall", "text": "Disallow communication between h2 and h1."}
+{"id": "firewall-09", "capability": "firewall", "text": "Firewall rule to drop packets from h1 to h2."}
+{"id": "firewall-10", "capability": "firewall", "text": "Block TCP destination port 8080 for h3."}
+{"id": "firewall-11", "capability": "firewall", "text": "Stop UDP traffic from h1 to h3."}
+{"id": "firewall-12", "capability": "firewall", "text": "Restrict access by blocking traffic from 10.0.0.3."}
+{"id": "rate_limit-01", "capability": "rate_limit", "text": "Limit bandwidth from h1 to h2 to 10 Mbps."}
+{"id": "rate_limit-02", "capability": "rate_limit", "text": "Apply a 5 Mbps rate limit to host h3."}
+{"id": "rate_limit-03", "capability": "rate_limit", "text": "Throttle TCP throughput from h2 to 2 megabits per second."}
+{"id": "rate_limit-04", "capability": "rate_limit", "text": "Cap upload bandwidth for h1 at 1 Mbps."}
+{"id": "rate_limit-05", "capability": "rate_limit", "text": "Shape traffic to 20 Mbps on switch s1."}
+{"id": "rate_limit-06", "capability": "rate_limit", "text": "Enforce a maximum data rate of 500 kbps."}
+{"id": "rate_limit-07", "capability": "rate_limit", "text": "Set an egress rate limit of 8 Mbps for h2."}
+{"id": "rate_limit-08", "capability": "rate_limit", "text": "Reduce throughput using a bandwidth cap."}
+{"id": "rate_limit-09", "capability": "rate_limit", "text": "Police incoming network traffic to 100 Mbps."}
+{"id": "rate_limit-10", "capability": "rate_limit", "text": "Restrict the network speed for h3 to 3 Mbps."}
+{"id": "rate_limit-11", "capability": "rate_limit", "text": "Throttle traffic flows to a given bit rate."}
+{"id": "rate_limit-12", "capability": "rate_limit", "text": "Configure QoS bandwidth rate limiting for h1."}
+{"id": "load_profile-01", "capability": "load_profile", "text": "Generate a network traffic load profile for h1."}
+{"id": "load_profile-02", "capability": "load_profile", "text": "Simulate a peak-hour network workload."}
+{"id": "load_profile-03", "capability": "load_profile", "text": "Create a synthetic traffic load pattern."}
+{"id": "load_profile-04", "capability": "load_profile", "text": "Emulate bursty traffic between hosts for testing."}
+{"id": "load_profile-05", "capability": "load_profile", "text": "Schedule a network load test with changing traffic intensity."}
+{"id": "load_profile-06", "capability": "load_profile", "text": "Replay a traffic profile with rising packet rates."}
+{"id": "load_profile-07", "capability": "load_profile", "text": "Generate background workload on the test topology."}
+{"id": "load_profile-08", "capability": "load_profile", "text": "Run a stress test with synthetic flows."}
+{"id": "load_profile-09", "capability": "load_profile", "text": "Model an hourly traffic demand curve."}
+{"id": "load_profile-10", "capability": "load_profile", "text": "Simulate realistic packet arrivals under load."}
+{"id": "load_profile-11", "capability": "load_profile", "text": "Create a constant-load traffic generation scenario."}
+{"id": "load_profile-12", "capability": "load_profile", "text": "Produce an emulated workload of 100 flows per second."}

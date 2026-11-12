@@ -31,6 +31,7 @@ services:
       LLNET_RETRIEVER_URL: http://intent-retriever:8092
       LLNET_PHI_URL: http://phi-inference:8093
       LLNET_PHI_TIMEOUT_SECONDS: '180'
+      LLNET_DRY_RUN_CONTEXT_MODE: fixture
     ports:
       - '127.0.0.1:8094:8094'
     restart: unless-stopped
