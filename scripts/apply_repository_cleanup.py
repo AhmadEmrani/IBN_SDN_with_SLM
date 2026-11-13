@@ -81,7 +81,10 @@ def main():
         if not (ROOT/path).is_file():
             raise RuntimeError(f'Missing 5F.4 overlay file: {path}')
     # Verify new Compose references none of the archived Dockerfiles.
-    compose=(ROOT/'compose.yaml').read_text()
+    compose = '\n'.join(
+        line for line in (ROOT/'compose.yaml').read_text(encoding='utf-8').splitlines()
+        if line.strip() and not line.lstrip().startswith('#')
+    )
     for stale in ('dockerfile: Dockerfile.', 'dockerfile: policy-manager/Dockerfile',
                   'compose.stage5c.yml','compose.stage5d.yml'):
         if stale in compose: raise RuntimeError('Stale runtime Compose reference: '+stale)
