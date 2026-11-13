@@ -17,7 +17,7 @@ COPY contracts/intent-v1 /workspace/contracts/intent-v1
 COPY data/intents/stage5a /workspace/data/intents/stage5a
 COPY data/intents/stage5d4/routing-prototypes.jsonl /workspace/data/intents/stage5d4/routing-prototypes.jsonl
 COPY prompts/intents/v1 /workspace/prompts/intents/v1
-COPY scripts/stage5c_retrieve.py /workspace/scripts/stage5c_retrieve.py
+COPY scripts/retrieve_examples.py /workspace/scripts/retrieve_examples.py
 COPY policy-manager/tests/test_v05c_retriever_api.py /workspace/policy-manager/tests/test_v05c_retriever_api.py
 COPY policy-manager/tests/test_v05d4_bge_routing.py /workspace/policy-manager/tests/test_v05d4_bge_routing.py
 RUN mkdir -p /var/cache/llnet/huggingface /var/cache/llnet/index
