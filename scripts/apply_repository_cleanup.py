@@ -59,8 +59,15 @@ def git(*args):
 def main():
     if git('branch','--show-current') != BRANCH:
         raise RuntimeError('Expected refactor/stages branch. Refusing changes.')
-    if git('rev-parse','HEAD') != EXPECTED_HEAD:
-        raise RuntimeError('Expected commit bad0cbe before cleanup; compare branch and rebase patch if needed.')
+    result = subprocess.run(
+        ['git', 'merge-base', '--is-ancestor', EXPECTED_HEAD, 'HEAD'],
+        cwd=ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            'Expected base commit bad0cbe is not an ancestor of HEAD.'
+        )
     if git('diff','--name-only') or git('diff','--cached','--name-only'):
         raise RuntimeError('Tracked changes present; commit/stash them first.')
     source_names=list(RELOCATE)
