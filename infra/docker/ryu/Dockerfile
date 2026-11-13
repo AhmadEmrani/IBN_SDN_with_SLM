@@ -1,0 +1,8 @@
+FROM python:3.9-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y git gcc && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir "setuptools<66.0.0" pbr
+RUN pip install --no-cache-dir ryu eventlet==0.30.2 webob routes tinyrpc
+COPY controller.py /app/
+EXPOSE 6653 8080
+CMD ["ryu-manager", "--verbose", "controller.py", "ryu.app.ofctl_rest"]

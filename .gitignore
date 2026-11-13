@@ -1,8 +1,12 @@
 .env
+.env.*
+!.env.example
 __pycache__/
 .pytest_cache/
 *.pyc
 .venv/
-
-# Local database dumps must never be committed
 backups/
+models/**/*.gguf
+models/**/*.gguf.*
+models/**/*.part
+*.zip

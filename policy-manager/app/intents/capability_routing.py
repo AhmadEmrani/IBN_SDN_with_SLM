@@ -10,6 +10,7 @@ import os
 import re
 from pathlib import Path
 from app.intents.retrieval import BGE_MODEL, QUERY_INSTRUCTION, _normalized, _dot, _get_corpus_vectors
+from app.intents.capability_registry import enabled_map
 
 ROOT = Path(__file__).resolve().parents[3]
 PROTOTYPES = ROOT / 'data/intents/stage5d4/routing-prototypes.jsonl'
@@ -86,7 +87,7 @@ def route_intent(text: str, *, encoder, model_id: str = BGE_MODEL,
             status,chosen,reason='ambiguous',None,'insufficient_semantic_evidence'
         else:
             status,chosen,reason='selected',best,None
-    enabled={x['id']:bool(x.get('enabled')) for x in json.loads(REGISTRY.read_text())['capabilities']}
+    enabled = enabled_map()
     if status=='selected' and not enabled.get(chosen,False):
         status,reason='unsupported','capability_disabled'
     return {'routing_status':status,'capability':chosen,'supported':status=='selected',
