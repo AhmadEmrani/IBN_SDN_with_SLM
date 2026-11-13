@@ -3,6 +3,7 @@ import logging
 from uuid import uuid4
 
 from fastapi.concurrency import run_in_threadpool
+from starlette.routing import Match
 
 from app.db.session import SessionLocal
 from app.models.event import APIRequestEvent
@@ -20,23 +21,41 @@ def _write_event(request_id: str, method: str, route: str, status_code: int):
 
 
 def _route_template(request) -> str:
-    """Resolve the full route template for audit, never log raw URL identifiers.
+    """Return a matched *template*, never the raw URL path or an identifier.
 
-    Router match data in middleware scope may be partial/rewritten by nested
-    routers. Match the full request path against the application's compiled
-    route regexes instead.
+    FastAPI >=0.137 retains included routers as wrappers without ``.path``.
+    ``iter_route_contexts`` expands them to effective prefixed routes.
+    For 405 responses retain the templated PARTIAL match.
     """
-    full_path = request.url.path
-    for route in request.app.router.routes:
-        regex = getattr(route, "path_regex", None)
-        methods = getattr(route, "methods", None)
-        if regex is None:
+    try:
+        from fastapi.routing import iter_route_contexts
+    except ImportError:
+        # FastAPI <0.137 has flat routes; 0.137.0/1 have private wrappers.
+        def compatible_routes():
+            for item in request.app.router.routes:
+                expand = getattr(item, 'effective_route_contexts', None)
+                if callable(expand):
+                    yield from expand()
+                else:
+                    yield item
+        routes = compatible_routes()
+    else:
+        routes = iter_route_contexts(request.app.router.routes)
+
+    partial_template = None
+    for route in routes:
+        template = getattr(route, 'path_format', None) or getattr(route, 'path', None)
+        if not isinstance(template, str):
             continue
-        if methods is not None and request.method not in methods:
+        try:
+            match, _scope = route.matches(request.scope)
+        except (AttributeError, TypeError, ValueError):
             continue
-        if regex.fullmatch(full_path):
-            return route.path
-    return "/unmatched"
+        if match == Match.FULL:
+            return template
+        if match == Match.PARTIAL and partial_template is None:
+            partial_template = template
+    return partial_template or '/unmatched'
 
 
 async def audit_failed_requests(request, call_next):
@@ -44,12 +63,12 @@ async def audit_failed_requests(request, call_next):
     response = await call_next(request)
     response.headers['X-Request-Id'] = request_id
     if response.status_code >= 400:
-        route = _route_template(request)
+        # Auditing must never cause an otherwise valid API error to become 500.
         try:
+            route = _route_template(request)
             await run_in_threadpool(
                 _write_event, request_id, request.method, route, response.status_code
             )
         except Exception:
-            # An audit DB outage must not transform a validation error into 500.
             logger.exception('API audit persistence failed for status %d', response.status_code)
     return response
